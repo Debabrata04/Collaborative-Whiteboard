@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Whiteboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <!-- Background animation -->
+  <ul class="bg-bubbles">
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+  </ul>
+
+  <!-- Home Page -->
+  <div class="container" id="home-page">
+    <h1>Collaborative Whiteboard</h1>
+    <div class="actions">
+      <button id="create-room">
+        <i class="fas fa-plus"></i> Create New Room
+      </button>
+      
+      <div class="join-room">
+        <input type="text" id="secret-code" placeholder="Enter secret code">
+        <button id="join-room">
+          <i class="fas fa-sign-in-alt"></i> Join Room
+        </button>
+      </div>
+      
+      <div class="loading" id="loading">
+        <i class="fas fa-spinner fa-spin"></i> <span id="loading-text">Creating your whiteboard room...</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

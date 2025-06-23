@@ -1,0 +1,1883 @@
+<!-- <!DOCTYPE html> -->
+<!-- <html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Whiteboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    button {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 50px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .join-room {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      padding: 15px 20px;
+      border: 2px solid #e1e5e9;
+      border-radius: 50px;
+      font-size: 1em;
+      outline: none;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="text"]:focus {
+      border-color: #667eea;
+    }
+
+    /* Whiteboard Styles */
+    .whiteboard-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #f5f5f5;
+    }
+
+    .whiteboard-container.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #toolbar {
+      background: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.2em;
+      min-width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tool-btn:hover {
+      background: #e9ecef;
+      transform: translateY(-1px);
+    }
+
+    .tool-btn.active-tool {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border-color: #667eea;
+    }
+
+    #color-picker {
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #brush-size {
+      width: 120px;
+    }
+
+    .size-display {
+      font-weight: bold;
+      color: #666;
+      min-width: 40px;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #whiteboard {
+      display: block;
+      background: white;
+      cursor: crosshair;
+      width: 100%;
+      height: 100%;
+    }
+
+    #user-list {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      min-width: 150px;
+    }
+
+    #user-list h3 {
+      margin-bottom: 10px;
+      color: #333;
+      font-size: 1em;
+    }
+
+    #users {
+      list-style: none;
+    }
+
+    #users li {
+      padding: 5px 0;
+      color: #666;
+      font-size: 0.9em;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #ff6b6b;
+      z-index: 1001;
+    }
+
+    .back-btn:hover {
+      background: #ff5252;
+    }
+  </style>
+</head>
+<body>
+  Home Page
+  <div class="container" id="home-page">
+    <h1>Collaborative Whiteboard</h1>
+    <div class="actions">
+      <button id="create-room">Create New Room</button>
+      <div class="join-room">
+        <input type="text" id="room-id" placeholder="Enter Room ID">
+        <button id="join-room">Join Room</button>
+      </div>
+    </div>
+  </div>
+
+  Whiteboard Page
+  <div class="whiteboard-container" id="whiteboard-page">
+    <button class="back-btn" id="back-home">← Back to Home</button>
+    <div id="toolbar">
+      <button id="pen" class="tool-btn active-tool" title="Pen">✏️</button>
+      <button id="eraser" class="tool-btn" title="Eraser">🧽</button>
+      <button id="rectangle" class="tool-btn" title="Rectangle">⬛</button>
+      <button id="circle" class="tool-btn" title="Circle">⭕</button>
+      <button id="text" class="tool-btn" title="Text">T</button>
+      <input type="color" id="color-picker" value="#000000" title="Color">
+      <input type="range" id="brush-size" min="1" max="50" value="5" title="Brush Size">
+      <span class="size-display" id="size-display">5px</span>
+      <button id="undo" class="tool-btn" title="Undo">↩️</button>
+      <button id="redo" class="tool-btn" title="Redo">↪️</button>
+      <button id="clear" class="tool-btn" title="Clear">🗑️</button>
+      <button id="save" class="tool-btn" title="Save">💾</button>
+    </div>
+    <div id="canvas-container">
+      <canvas id="whiteboard"></canvas>
+    </div>
+    <div id="user-list">
+      <h3>Active Users</h3>
+      <ul id="users"></ul>
+    </div>
+  </div>
+
+  <script type="module">
+    // Firebase Configuration (Using your config)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
+    import { getDatabase, ref, push, set, onChildAdded, remove, onValue } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAE1cEhSkn7VcweOMEYxXwBu4eiIVHE4Rg",
+      authDomain: "collaborative-whiteboard-b5400.firebaseapp.com",
+      databaseURL: "https://collaborative-whiteboard-b5400-default-rtdb.firebaseio.com",
+      projectId: "collaborative-whiteboard-b5400",
+      storageBucket: "collaborative-whiteboard-b5400.firebasestorage.app",
+      messagingSenderId: "1025566755171",
+      appId: "1:1025566755171:web:253a8b2728ce658cba2b56",
+      measurementId: "G-C83DB89VSL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    // Application State
+    let currentRoomId = null;
+    let currentUserId = null;
+    let whiteboard = null;
+
+    // DOM Elements
+    const homePage = document.getElementById('home-page');
+    const whiteboardPage = document.getElementById('whiteboard-page');
+    const createRoomBtn = document.getElementById('create-room');
+    const joinRoomBtn = document.getElementById('join-room');
+    const roomIdInput = document.getElementById('room-id');
+    const backHomeBtn = document.getElementById('back-home');
+
+    // Firebase Functions
+    async function createRoom(isPublic = true) {
+      try {
+        const roomRef = ref(database, 'rooms');
+        const newRoomRef = push(roomRef);
+        await set(newRoomRef, {
+          isPublic,
+          createdAt: Date.now(),
+          users: {},
+          drawings: {}
+        });
+        return newRoomRef.key;
+      } catch (error) {
+        console.error("Error in createRoom:", error);
+        throw error;
+      }
+    }
+
+    function listenToRoom(roomId, callback) {
+      const drawingsRef = ref(database, `rooms/${roomId}/drawings`);
+      onChildAdded(drawingsRef, (snapshot) => {
+        callback(snapshot.val());
+      });
+    }
+
+    function sendDrawing(roomId, drawingData) {
+      const drawingsRef = ref(database, `rooms/${roomId}/drawings`);
+      push(drawingsRef, drawingData);
+    }
+
+    function clearRoomDrawings(roomId) {
+      const drawingsRef = ref(database, `rooms/${roomId}/drawings`);
+      remove(drawingsRef);
+    }
+
+    // Whiteboard Class
+    class Whiteboard {
+      constructor(canvasId, roomId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.roomId = roomId;
+        this.isDrawing = false;
+        this.currentTool = 'pen';
+        this.color = '#000000';
+        this.brushSize = 5;
+        this.startX = 0;
+        this.startY = 0;
+        this.actions = [];
+        this.undoneActions = [];
+        this.drawingPath = [];
+
+        this.setupCanvas();
+        this.setupEventListeners();
+        this.setupToolbar();
+        this.setupFirebase();
+      }
+
+      setupCanvas() {
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+      }
+
+      resizeCanvas() {
+        const container = document.getElementById('canvas-container');
+        this.canvas.width = container.clientWidth;
+        this.canvas.height = container.clientHeight;
+        
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.redrawCanvas();
+      }
+
+      setupFirebase() {
+        listenToRoom(this.roomId, (drawing) => {
+          this.executeAction(drawing, false);
+        });
+      }
+
+      setupEventListeners() {
+        // Mouse events
+        this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+        this.canvas.addEventListener('mousemove', this.draw.bind(this));
+        this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+        this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+
+        // Touch events
+        this.canvas.addEventListener('touchstart', this.handleTouchStart.bind(this));
+        this.canvas.addEventListener('touchmove', this.handleTouchMove.bind(this));
+        this.canvas.addEventListener('touchend', this.handleTouchEnd.bind(this));
+        
+        // Prevent scrolling when touching the canvas
+        this.canvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+        this.canvas.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+        this.canvas.addEventListener('touchend', (e) => e.preventDefault(), { passive: false });
+      }
+
+      setupToolbar() {
+        // Tool buttons
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const toolId = e.target.id;
+            if (['pen', 'eraser', 'rectangle', 'circle', 'text'].includes(toolId)) {
+              this.setTool(toolId);
+            } else {
+              this.handleToolAction(toolId);
+            }
+          });
+        });
+
+        // Color picker
+        document.getElementById('color-picker').addEventListener('change', (e) => {
+          this.color = e.target.value;
+        });
+
+        // Brush size
+        const brushSlider = document.getElementById('brush-size');
+        const sizeDisplay = document.getElementById('size-display');
+        
+        brushSlider.addEventListener('input', (e) => {
+          this.brushSize = parseInt(e.target.value);
+          sizeDisplay.textContent = `${this.brushSize}px`;
+        });
+      }
+
+      setTool(tool) {
+        this.currentTool = tool;
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+          btn.classList.remove('active-tool');
+        });
+        document.getElementById(tool).classList.add('active-tool');
+        this.updateCursor();
+      }
+
+      updateCursor() {
+        switch (this.currentTool) {
+          case 'pen':
+            this.canvas.style.cursor = 'crosshair';
+            break;
+          case 'eraser':
+            this.canvas.style.cursor = 'grab';
+            break;
+          case 'text':
+            this.canvas.style.cursor = 'text';
+            break;
+          default:
+            this.canvas.style.cursor = 'crosshair';
+        }
+      }
+
+      handleToolAction(action) {
+        switch (action) {
+          case 'undo':
+            this.undo();
+            break;
+          case 'redo':
+            this.redo();
+            break;
+          case 'clear':
+            this.clear();
+            break;
+          case 'save':
+            this.save();
+            break;
+        }
+      }
+
+      getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
+
+      getTouchPos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+          x: e.touches[0].clientX - rect.left,
+          y: e.touches[0].clientY - rect.top
+        };
+      }
+
+      startDrawing(e) {
+        this.isDrawing = true;
+        const pos = this.getMousePos(e);
+        this.startX = pos.x;
+        this.startY = pos.y;
+        this.drawingPath = [pos];
+
+        if (this.currentTool === 'pen' || this.currentTool === 'eraser') {
+          this.ctx.beginPath();
+          this.ctx.moveTo(pos.x, pos.y);
+        } else if (this.currentTool === 'text') {
+          this.addText(pos.x, pos.y);
+        }
+      }
+
+      draw(e) {
+        if (!this.isDrawing) return;
+
+        const pos = this.getMousePos(e);
+        
+        if (this.currentTool === 'pen') {
+          this.drawLine(this.drawingPath[this.drawingPath.length - 1], pos);
+          this.drawingPath.push(pos);
+        } else if (this.currentTool === 'eraser') {
+          this.erase(pos);
+          this.drawingPath.push(pos);
+        }
+      }
+
+      stopDrawing(e) {
+        if (!this.isDrawing) return;
+        this.isDrawing = false;
+
+        const pos = this.getMousePos(e);
+
+        if (this.currentTool === 'pen' && this.drawingPath.length > 1) {
+          const action = {
+            tool: 'pen',
+            color: this.color,
+            size: this.brushSize,
+            path: this.drawingPath,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        } else if (this.currentTool === 'eraser' && this.drawingPath.length > 1) {
+          const action = {
+            tool: 'eraser',
+            size: this.brushSize,
+            path: this.drawingPath,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        } else if (this.currentTool === 'rectangle') {
+          this.drawRectangle(this.startX, this.startY, pos.x, pos.y, true);
+        } else if (this.currentTool === 'circle') {
+          this.drawCircle(this.startX, this.startY, pos.x, pos.y, true);
+        }
+
+        this.drawingPath = [];
+      }
+
+      drawLine(from, to) {
+        this.ctx.lineWidth = this.brushSize;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(from.x, from.y);
+        this.ctx.lineTo(to.x, to.y);
+        this.ctx.stroke();
+      }
+
+      erase(pos) {
+        this.ctx.globalCompositeOperation = 'destination-out';
+        this.ctx.beginPath();
+        this.ctx.arc(pos.x, pos.y, this.brushSize, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.globalCompositeOperation = 'source-over';
+      }
+
+      drawRectangle(startX, startY, endX, endY, save = false) {
+        const width = endX - startX;
+        const height = endY - startY;
+        
+        this.ctx.lineWidth = this.brushSize;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.strokeRect(startX, startY, width, height);
+        
+        if (save) {
+          const action = {
+            tool: 'rectangle',
+            color: this.color,
+            size: this.brushSize,
+            x: startX,
+            y: startY,
+            width,
+            height,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        }
+      }
+
+      drawCircle(startX, startY, endX, endY, save = false) {
+        const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+        
+        this.ctx.lineWidth = this.brushSize;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.beginPath();
+        this.ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+        this.ctx.stroke();
+        
+        if (save) {
+          const action = {
+            tool: 'circle',
+            color: this.color,
+            size: this.brushSize,
+            x: startX,
+            y: startY,
+            radius,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        }
+      }
+
+      addText(x, y) {
+        const text = prompt('Enter text:');
+        if (text) {
+          this.ctx.font = `${this.brushSize * 4}px Arial`;
+          this.ctx.fillStyle = this.color;
+          this.ctx.fillText(text, x, y);
+          
+          const action = {
+            tool: 'text',
+            color: this.color,
+            size: this.brushSize * 4,
+            text,
+            x,
+            y,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        }
+      }
+
+      // Touch event handlers
+      handleTouchStart(e) {
+        e.preventDefault();
+        const pos = this.getTouchPos(e);
+        this.isDrawing = true;
+        this.startX = pos.x;
+        this.startY = pos.y;
+        this.drawingPath = [pos];
+
+        if (this.currentTool === 'text') {
+          this.addText(pos.x, pos.y);
+        }
+      }
+
+      handleTouchMove(e) {
+        e.preventDefault();
+        if (!this.isDrawing) return;
+
+        const pos = this.getTouchPos(e);
+        
+        if (this.currentTool === 'pen') {
+          this.drawLine(this.drawingPath[this.drawingPath.length - 1], pos);
+          this.drawingPath.push(pos);
+        } else if (this.currentTool === 'eraser') {
+          this.erase(pos);
+          this.drawingPath.push(pos);
+        }
+      }
+
+      handleTouchEnd(e) {
+        e.preventDefault();
+        if (!this.isDrawing) return;
+        this.isDrawing = false;
+
+        if (this.currentTool === 'pen' && this.drawingPath.length > 1) {
+          const action = {
+            tool: 'pen',
+            color: this.color,
+            size: this.brushSize,
+            path: this.drawingPath,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        } else if (this.currentTool === 'eraser' && this.drawingPath.length > 1) {
+          const action = {
+            tool: 'eraser',
+            size: this.brushSize,
+            path: this.drawingPath,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        }
+
+        this.drawingPath = [];
+      }
+
+      saveAction(action) {
+        this.actions.push(action);
+        this.undoneActions = [];
+        sendDrawing(this.roomId, action);
+      }
+
+      executeAction(action, isLocal = true) {
+        if (!action) return;
+
+        this.ctx.lineWidth = action.size || this.brushSize;
+        this.ctx.strokeStyle = action.color || this.color;
+        this.ctx.fillStyle = action.color || this.color;
+
+        switch (action.tool) {
+          case 'pen':
+            if (action.path && action.path.length > 1) {
+              this.ctx.beginPath();
+              this.ctx.moveTo(action.path[0].x, action.path[0].y);
+              for (let i = 1; i < action.path.length; i++) {
+                this.ctx.lineTo(action.path[i].x, action.path[i].y);
+              }
+              this.ctx.stroke();
+            }
+            break;
+          case 'eraser':
+            if (action.path && action.path.length > 0) {
+              this.ctx.globalCompositeOperation = 'destination-out';
+              action.path.forEach(pos => {
+                this.ctx.beginPath();
+                this.ctx.arc(pos.x, pos.y, action.size, 0, 2 * Math.PI);
+                this.ctx.fill();
+              });
+              this.ctx.globalCompositeOperation = 'source-over';
+            }
+            break;
+          case 'rectangle':
+            this.ctx.strokeRect(action.x, action.y, action.width, action.height);
+            break;
+          case 'circle':
+            this.ctx.beginPath();
+            this.ctx.arc(action.x, action.y, action.radius, 0, 2 * Math.PI);
+            this.ctx.stroke();
+            break;
+          case 'text':
+            this.ctx.font = `${action.size}px Arial`;
+            this.ctx.fillText(action.text, action.x, action.y);
+            break;
+          case 'clear':
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            break;
+        }
+
+        if (!isLocal) {
+          this.actions.push(action);
+        }
+      }
+
+      undo() {
+        if (this.actions.length > 0) {
+          const lastAction = this.actions.pop();
+          this.undoneActions.push(lastAction);
+          this.redrawCanvas();
+        }
+      }
+
+      redo() {
+        if (this.undoneActions.length > 0) {
+          const actionToRedo = this.undoneActions.pop();
+          this.actions.push(actionToRedo);
+          this.executeAction(actionToRedo);
+          sendDrawing(this.roomId, actionToRedo);
+        }
+      }
+
+      clear() {
+        if (confirm('Are you sure you want to clear the whiteboard? This will clear it for all users.')) {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          this.actions = [];
+          this.undoneActions = [];
+          
+          const clearAction = {
+            tool: 'clear',
+            timestamp: Date.now()
+          };
+          
+          sendDrawing(this.roomId, clearAction);
+          clearRoomDrawings(this.roomId);
+        }
+      }
+
+      save() {
+        const link = document.createElement('a');
+        link.download = `whiteboard-${this.roomId}-${Date.now()}.png`;
+        link.href = this.canvas.toDataURL();
+        link.click();
+      }
+
+      redrawCanvas() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.actions.forEach(action => {
+          this.executeAction(action, false);
+        });
+      }
+    }
+
+    // Navigation Functions
+    function showWhiteboard(roomId) {
+      currentRoomId = roomId;
+      homePage.style.display = 'none';
+      whiteboardPage.classList.add('active');
+      
+      // Initialize whiteboard
+      whiteboard = new Whiteboard('whiteboard', roomId);
+      
+      // Setup user tracking
+      setupUserTracking(roomId);
+    }
+
+    function showHome() {
+      homePage.style.display = 'flex';
+      whiteboardPage.classList.remove('active');
+      
+      // Cleanup
+      if (currentUserId && currentRoomId) {
+        const userRef = ref(database, `rooms/${currentRoomId}/users/${currentUserId}`);
+        set(userRef, null);
+      }
+      
+      currentRoomId = null;
+      currentUserId = null;
+      whiteboard = null;
+    }
+
+    function setupUserTracking(roomId) {
+      const usersRef = ref(database, `rooms/${roomId}/users`);
+      currentUserId = Math.random().toString(36).substring(7);
+      
+      // Add current user
+      set(ref(database, `rooms/${roomId}/users/${currentUserId}`), {
+        name: `User-${currentUserId.substring(0, 4)}`,
+        joinedAt: Date.now()
+      });
+      
+      // Listen for user changes
+      onValue(usersRef, (snapshot) => {
+        const usersList = document.getElementById('users');
+        usersList.innerHTML = '';
+        const users = snapshot.val() || {};
+        Object.values(users).forEach(user => {
+          const li = document.createElement('li');
+          li.textContent = user.name;
+          usersList.appendChild(li);
+        });
+      });
+      
+      // Remove user on page unload
+      window.addEventListener('beforeunload', () => {
+        set(ref(database, `rooms/${roomId}/users/${currentUserId}`), null);
+      });
+    }
+
+    // Event Listeners
+    createRoomBtn.addEventListener('click', async () => {
+      try {
+        createRoomBtn.disabled = true;
+        createRoomBtn.textContent = 'Creating...';
+        
+        const roomId = await createRoom();
+        showWhiteboard(roomId);
+      } catch (error) {
+        console.error("Failed to create room:", error);
+        alert("Error creating room. Please try again.");
+      } finally {
+        createRoomBtn.disabled = false;
+        createRoomBtn.textContent = 'Create New Room';
+      }
+    });
+
+    joinRoomBtn.addEventListener('click', () => {
+      const roomId = roomIdInput.value.trim();
+      if (roomId) {
+        showWhiteboard(roomId);
+        roomIdInput.value = '';
+      } else {
+        alert('Please enter a valid Room ID');
+      }
+    });
+
+    backHomeBtn.addEventListener('click', showHome);
+
+    // Allow Enter key to join room
+    roomIdInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        joinRoomBtn.click();
+      }
+    });
+  </script>
+</body>
+</html> -->
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Whiteboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 500px;
+      width: 90%;
+      z-index: 10;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      font-size: 2.5em;
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    button {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 50px;
+      font-size: 1.1em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    }
+
+    .whiteboard-container {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #f5f5f5;
+      z-index: 1000;
+    }
+
+    .whiteboard-container.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    #toolbar {
+      background: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 10px 15px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 1.2em;
+      min-width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tool-btn:hover {
+      background: #e9ecef;
+      transform: translateY(-1px);
+    }
+
+    .tool-btn.active-tool {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      border-color: #667eea;
+    }
+
+    #color-picker {
+      width: 50px;
+      height: 50px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    #brush-size {
+      width: 120px;
+    }
+
+    .size-display {
+      font-weight: bold;
+      color: #666;
+      min-width: 40px;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #whiteboard {
+      display: block;
+      background: white;
+      cursor: crosshair;
+      width: 100%;
+      height: 100%;
+    }
+
+    #user-list {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      min-width: 150px;
+      z-index: 1001;
+    }
+
+    #user-list h3 {
+      margin-bottom: 10px;
+      color: #333;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    #users {
+      list-style: none;
+    }
+
+    #users li {
+      padding: 5px 0;
+      color: #666;
+      font-size: 0.9em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #users li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      background-color: #4CAF50;
+      border-radius: 50%;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: #ff6b6b;
+      z-index: 1001;
+    }
+
+    .back-btn:hover {
+      background: #ff5252;
+    }
+
+    /* Link sharing section */
+    .link-container {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      margin: 20px auto 0;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 90%;
+    }
+
+    .link-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .link-area {
+      display: flex;
+      gap: 10px;
+    }
+
+    #share-link {
+      flex: 1;
+      padding: 10px 15px;
+      border: 2px solid #e1e5e9;
+      border-radius: 50px;
+      font-size: 0.9em;
+      background: #f8f9fa;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #copy-link {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: background 0.3s;
+      min-width: 100px;
+    }
+
+    #copy-link:hover {
+      background: #388E3C;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #4CAF50;
+      color: white;
+      padding: 12px 25px;
+      border-radius: 50px;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notification.show {
+      opacity: 1;
+    }
+
+    .loading {
+      display: none;
+      font-size: 1.2em;
+      margin-top: 20px;
+      color: #764ba2;
+      font-weight: 600;
+    }
+
+    /* Background animation */
+    .bg-bubbles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .bg-bubbles li {
+      position: absolute;
+      list-style: none;
+      display: block;
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255, 255, 255, 0.15);
+      bottom: -160px;
+      animation: square 25s infinite;
+      transition-timing-function: linear;
+      border-radius: 50%;
+    }
+
+    .bg-bubbles li:nth-child(1) {
+      left: 10%;
+    }
+
+    .bg-bubbles li:nth-child(2) {
+      left: 20%;
+      width: 80px;
+      height: 80px;
+      animation-delay: 2s;
+      animation-duration: 17s;
+    }
+
+    .bg-bubbles li:nth-child(3) {
+      left: 25%;
+      animation-delay: 4s;
+    }
+
+    .bg-bubbles li:nth-child(4) {
+      left: 40%;
+      width: 60px;
+      height: 60px;
+      animation-duration: 22s;
+      background-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .bg-bubbles li:nth-child(5) {
+      left: 70%;
+    }
+
+    .bg-bubbles li:nth-child(6) {
+      left: 80%;
+      width: 120px;
+      height: 120px;
+      animation-delay: 3s;
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .bg-bubbles li:nth-child(7) {
+      left: 32%;
+      width: 160px;
+      height: 160px;
+      animation-delay: 7s;
+    }
+
+    .bg-bubbles li:nth-child(8) {
+      left: 55%;
+      width: 20px;
+      height: 20px;
+      animation-delay: 15s;
+      animation-duration: 40s;
+    }
+
+    @keyframes square {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+        border-radius: 50%;
+      }
+      100% {
+        transform: translateY(-1000px) rotate(720deg);
+        opacity: 0;
+        border-radius: 50%;
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      #toolbar {
+        gap: 8px;
+        padding: 10px;
+      }
+      
+      .tool-btn {
+        min-width: 40px;
+        height: 40px;
+        font-size: 1em;
+        padding: 8px 12px;
+      }
+      
+      #user-list {
+        top: 70px;
+        right: 10px;
+        padding: 10px;
+        min-width: 120px;
+      }
+      
+      .link-container {
+        padding: 12px;
+      }
+      
+      .link-area {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background animation -->
+  <ul class="bg-bubbles">
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+    <li></li>
+  </ul>
+
+  <!-- Home Page -->
+  <div class="container" id="home-page">
+    <h1>Collaborative Whiteboard</h1>
+    <div class="actions">
+      <button id="create-room">
+        <i class="fas fa-plus"></i> Create New Room
+      </button>
+      <div class="loading" id="loading">
+        <i class="fas fa-spinner fa-spin"></i> Creating your whiteboard room...
+      </div>
+    </div>
+  </div>
+
+  <!-- Whiteboard Page -->
+  <div class="whiteboard-container" id="whiteboard-page">
+    <button class="back-btn" id="back-home">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </button>
+    <div id="toolbar">
+      <button id="pen" class="tool-btn active-tool" title="Pen"><i class="fas fa-pen"></i></button>
+      <button id="eraser" class="tool-btn" title="Eraser"><i class="fas fa-eraser"></i></button>
+      <button id="rectangle" class="tool-btn" title="Rectangle"><i class="fas fa-square"></i></button>
+      <button id="circle" class="tool-btn" title="Circle"><i class="fas fa-circle"></i></button>
+      <button id="text" class="tool-btn" title="Text"><i class="fas fa-font"></i></button>
+      <input type="color" id="color-picker" value="#000000" title="Color">
+      <input type="range" id="brush-size" min="1" max="50" value="5" title="Brush Size">
+      <span class="size-display" id="size-display">5px</span>
+      <button id="undo" class="tool-btn" title="Undo"><i class="fas fa-undo"></i></button>
+      <button id="redo" class="tool-btn" title="Redo"><i class="fas fa-redo"></i></button>
+      <button id="clear" class="tool-btn" title="Clear"><i class="fas fa-trash-alt"></i></button>
+      <button id="save" class="tool-btn" title="Save"><i class="fas fa-save"></i></button>
+      <button id="copy-room-link" class="tool-btn" title="Copy Room Link"><i class="fas fa-link"></i></button>
+    </div>
+    <div id="canvas-container">
+      <canvas id="whiteboard"></canvas>
+    </div>
+    <div id="user-list">
+      <h3><i class="fas fa-users"></i> Active Users</h3>
+      <ul id="users"></ul>
+    </div>
+    
+    <!-- Link sharing container -->
+    <div class="link-container" id="link-container">
+      <div class="link-header">
+        <i class="fas fa-share-alt"></i> Share this link to invite others:
+      </div>
+      <div class="link-area">
+        <input type="text" id="share-link" readonly>
+        <button id="copy-link"><i class="fas fa-copy"></i> Copy Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i> Link copied to clipboard!
+  </div>
+
+  <script>
+    // Application State
+    let currentRoomId = null;
+    let currentRoomSecret = null;
+    let currentUserId = null;
+    let whiteboard = null;
+    let users = {};
+
+    // DOM Elements
+    const homePage = document.getElementById('home-page');
+    const whiteboardPage = document.getElementById('whiteboard-page');
+    const createRoomBtn = document.getElementById('create-room');
+    const backHomeBtn = document.getElementById('back-home');
+    const linkContainer = document.getElementById('link-container');
+    const shareLink = document.getElementById('share-link');
+    const copyLinkBtn = document.getElementById('copy-link');
+    const copyRoomLinkBtn = document.getElementById('copy-room-link');
+    const notification = document.getElementById('notification');
+    const loading = document.getElementById('loading');
+    const usersList = document.getElementById('users');
+
+    // Generate random secret
+    function generateSecret() {
+      const array = new Uint8Array(16);
+      window.crypto.getRandomValues(array);
+      return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Show notification
+    function showNotification(message) {
+      notification.textContent = message;
+      notification.classList.add('show');
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 2000);
+    }
+
+    // Whiteboard Class
+    class Whiteboard {
+      constructor(canvasId, roomId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.roomId = roomId;
+        this.isDrawing = false;
+        this.currentTool = 'pen';
+        this.color = '#000000';
+        this.brushSize = 5;
+        this.startX = 0;
+        this.startY = 0;
+        this.actions = [];
+        this.undoneActions = [];
+        this.drawingPath = [];
+
+        this.setupCanvas();
+        this.setupEventListeners();
+        this.setupToolbar();
+      }
+
+      setupCanvas() {
+        this.resizeCanvas();
+        window.addEventListener('resize', () => this.resizeCanvas());
+      }
+
+      resizeCanvas() {
+        const container = document.getElementById('canvas-container');
+        this.canvas.width = container.clientWidth;
+        this.canvas.height = container.clientHeight;
+        
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        this.redrawCanvas();
+      }
+
+      setupEventListeners() {
+        // Mouse events
+        this.canvas.addEventListener('mousedown', this.startDrawing.bind(this));
+        this.canvas.addEventListener('mousemove', this.draw.bind(this));
+        this.canvas.addEventListener('mouseup', this.stopDrawing.bind(this));
+        this.canvas.addEventListener('mouseout', this.stopDrawing.bind(this));
+      }
+
+      setupToolbar() {
+        // Tool buttons
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const toolId = e.currentTarget.id;
+            if (['pen', 'eraser', 'rectangle', 'circle', 'text'].includes(toolId)) {
+              this.setTool(toolId);
+            } else {
+              this.handleToolAction(toolId);
+            }
+          });
+        });
+
+        // Color picker
+        document.getElementById('color-picker').addEventListener('change', (e) => {
+          this.color = e.target.value;
+        });
+
+        // Brush size
+        const brushSlider = document.getElementById('brush-size');
+        const sizeDisplay = document.getElementById('size-display');
+        
+        brushSlider.addEventListener('input', (e) => {
+          this.brushSize = parseInt(e.target.value);
+          sizeDisplay.textContent = `${this.brushSize}px`;
+        });
+      }
+
+      setTool(tool) {
+        this.currentTool = tool;
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+          btn.classList.remove('active-tool');
+        });
+        document.getElementById(tool).classList.add('active-tool');
+        this.updateCursor();
+      }
+
+      updateCursor() {
+        switch (this.currentTool) {
+          case 'pen':
+            this.canvas.style.cursor = 'crosshair';
+            break;
+          case 'eraser':
+            this.canvas.style.cursor = 'grab';
+            break;
+          case 'text':
+            this.canvas.style.cursor = 'text';
+            break;
+          default:
+            this.canvas.style.cursor = 'crosshair';
+        }
+      }
+
+      handleToolAction(action) {
+        switch (action) {
+          case 'undo':
+            this.undo();
+            break;
+          case 'redo':
+            this.redo();
+            break;
+          case 'clear':
+            this.clear();
+            break;
+          case 'save':
+            this.save();
+            break;
+        }
+      }
+
+      getMousePos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
+
+      startDrawing(e) {
+        this.isDrawing = true;
+        const pos = this.getMousePos(e);
+        this.startX = pos.x;
+        this.startY = pos.y;
+        this.drawingPath = [pos];
+
+        if (this.currentTool === 'pen' || this.currentTool === 'eraser') {
+          this.ctx.beginPath();
+          this.ctx.moveTo(pos.x, pos.y);
+        } else if (this.currentTool === 'text') {
+          this.addText(pos.x, pos.y);
+        }
+      }
+
+      draw(e) {
+        if (!this.isDrawing) return;
+
+        const pos = this.getMousePos(e);
+        
+        if (this.currentTool === 'pen') {
+          this.drawLine(this.drawingPath[this.drawingPath.length - 1], pos);
+          this.drawingPath.push(pos);
+        } else if (this.currentTool === 'eraser') {
+          this.erase(pos);
+          this.drawingPath.push(pos);
+        } else if (this.currentTool === 'rectangle') {
+          this.redrawCanvas();
+          this.drawRectangle(this.startX, this.startY, pos.x, pos.y);
+        } else if (this.currentTool === 'circle') {
+          this.redrawCanvas();
+          this.drawCircle(this.startX, this.startY, pos.x, pos.y);
+        }
+      }
+
+      stopDrawing(e) {
+        if (!this.isDrawing) return;
+        this.isDrawing = false;
+
+        const pos = this.getMousePos(e);
+
+        if (this.currentTool === 'pen' && this.drawingPath.length > 1) {
+          const action = {
+            tool: 'pen',
+            color: this.color,
+            size: this.brushSize,
+            path: this.drawingPath,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        } else if (this.currentTool === 'eraser' && this.drawingPath.length > 1) {
+          const action = {
+            tool: 'eraser',
+            size: this.brushSize,
+            path: this.drawingPath,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        } else if (this.currentTool === 'rectangle') {
+          this.drawRectangle(this.startX, this.startY, pos.x, pos.y, true);
+        } else if (this.currentTool === 'circle') {
+          this.drawCircle(this.startX, this.startY, pos.x, pos.y, true);
+        }
+
+        this.drawingPath = [];
+      }
+
+      drawLine(from, to) {
+        this.ctx.lineWidth = this.brushSize;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
+        
+        this.ctx.beginPath();
+        this.ctx.moveTo(from.x, from.y);
+        this.ctx.lineTo(to.x, to.y);
+        this.ctx.stroke();
+      }
+
+      erase(pos) {
+        this.ctx.globalCompositeOperation = 'destination-out';
+        this.ctx.beginPath();
+        this.ctx.arc(pos.x, pos.y, this.brushSize, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.globalCompositeOperation = 'source-over';
+      }
+
+      drawRectangle(startX, startY, endX, endY, save = false) {
+        const width = endX - startX;
+        const height = endY - startY;
+        
+        this.ctx.lineWidth = this.brushSize;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.strokeRect(startX, startY, width, height);
+        
+        if (save) {
+          const action = {
+            tool: 'rectangle',
+            color: this.color,
+            size: this.brushSize,
+            x: startX,
+            y: startY,
+            width,
+            height,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        }
+      }
+
+      drawCircle(startX, startY, endX, endY, save = false) {
+        const radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
+        
+        this.ctx.lineWidth = this.brushSize;
+        this.ctx.strokeStyle = this.color;
+        this.ctx.beginPath();
+        this.ctx.arc(startX, startY, radius, 0, 2 * Math.PI);
+        this.ctx.stroke();
+        
+        if (save) {
+          const action = {
+            tool: 'circle',
+            color: this.color,
+            size: this.brushSize,
+            x: startX,
+            y: startY,
+            radius,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        }
+      }
+
+      addText(x, y) {
+        const text = prompt('Enter text:');
+        if (text) {
+          this.ctx.font = `${this.brushSize * 4}px Arial`;
+          this.ctx.fillStyle = this.color;
+          this.ctx.fillText(text, x, y);
+          
+          const action = {
+            tool: 'text',
+            color: this.color,
+            size: this.brushSize * 4,
+            text,
+            x,
+            y,
+            timestamp: Date.now()
+          };
+          this.saveAction(action);
+        }
+      }
+
+      saveAction(action) {
+        this.actions.push(action);
+        this.undoneActions = [];
+      }
+
+      executeAction(action) {
+        if (!action) return;
+
+        this.ctx.lineWidth = action.size || this.brushSize;
+        this.ctx.strokeStyle = action.color || this.color;
+        this.ctx.fillStyle = action.color || this.color;
+
+        switch (action.tool) {
+          case 'pen':
+            if (action.path && action.path.length > 1) {
+              this.ctx.beginPath();
+              this.ctx.moveTo(action.path[0].x, action.path[0].y);
+              for (let i = 1; i < action.path.length; i++) {
+                this.ctx.lineTo(action.path[i].x, action.path[i].y);
+              }
+              this.ctx.stroke();
+            }
+            break;
+          case 'eraser':
+            if (action.path && action.path.length > 0) {
+              this.ctx.globalCompositeOperation = 'destination-out';
+              action.path.forEach(pos => {
+                this.ctx.beginPath();
+                this.ctx.arc(pos.x, pos.y, action.size, 0, 2 * Math.PI);
+                this.ctx.fill();
+              });
+              this.ctx.globalCompositeOperation = 'source-over';
+            }
+            break;
+          case 'rectangle':
+            this.ctx.strokeRect(action.x, action.y, action.width, action.height);
+            break;
+          case 'circle':
+            this.ctx.beginPath();
+            this.ctx.arc(action.x, action.y, action.radius, 0, 2 * Math.PI);
+            this.ctx.stroke();
+            break;
+          case 'text':
+            this.ctx.font = `${action.size}px Arial`;
+            this.ctx.fillText(action.text, action.x, action.y);
+            break;
+          case 'clear':
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            break;
+        }
+      }
+
+      undo() {
+        if (this.actions.length > 0) {
+          const lastAction = this.actions.pop();
+          this.undoneActions.push(lastAction);
+          this.redrawCanvas();
+        }
+      }
+
+      redo() {
+        if (this.undoneActions.length > 0) {
+          const actionToRedo = this.undoneActions.pop();
+          this.actions.push(actionToRedo);
+          this.executeAction(actionToRedo);
+        }
+      }
+
+      clear() {
+        if (confirm('Are you sure you want to clear the whiteboard?')) {
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+          this.actions = [];
+          this.undoneActions = [];
+        }
+      }
+
+      save() {
+        const link = document.createElement('a');
+        link.download = `whiteboard-${this.roomId}-${Date.now()}.png`;
+        link.href = this.canvas.toDataURL();
+        link.click();
+      }
+
+      redrawCanvas() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.actions.forEach(action => {
+          this.executeAction(action);
+        });
+      }
+    }
+
+    // Navigation Functions
+    function showWhiteboard(roomId, secret) {
+      currentRoomId = roomId;
+      currentRoomSecret = secret;
+      homePage.style.display = 'none';
+      whiteboardPage.classList.add('active');
+      linkContainer.style.display = 'block';
+      
+      // Generate shareable link
+      const roomLink = `${window.location.origin}${window.location.pathname}?room=${roomId}&secret=${secret}`;
+      shareLink.value = roomLink;
+      
+      // Initialize whiteboard
+      whiteboard = new Whiteboard('whiteboard', roomId);
+      
+      // Setup user tracking
+      setupUserTracking(roomId);
+    }
+
+    function showHome() {
+      homePage.style.display = 'flex';
+      whiteboardPage.classList.remove('active');
+      linkContainer.style.display = 'none';
+      
+      // Cleanup
+      if (currentUserId && currentRoomId) {
+        users[currentUserId] = null;
+        updateUserList();
+      }
+      
+      currentRoomId = null;
+      currentRoomSecret = null;
+      currentUserId = null;
+      whiteboard = null;
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    function setupUserTracking(roomId) {
+      currentUserId = Math.random().toString(36).substring(7);
+      
+      // Add current user
+      const userName = `User-${currentUserId.substring(0, 4)}`;
+      users[currentUserId] = userName;
+      updateUserList();
+      
+      // Simulate other users joining
+      setTimeout(() => {
+        const fakeUserId = Math.random().toString(36).substring(7);
+        users[fakeUserId] = `User-${fakeUserId.substring(0, 4)}`;
+        updateUserList();
+      }, 2000);
+      
+      setTimeout(() => {
+        const fakeUserId = Math.random().toString(36).substring(7);
+        users[fakeUserId] = `User-${fakeUserId.substring(0, 4)}`;
+        updateUserList();
+      }, 4000);
+    }
+    
+    function updateUserList() {
+      usersList.innerHTML = '';
+      for (const [id, name] of Object.entries(users)) {
+        if (name) {
+          const li = document.createElement('li');
+          li.textContent = name;
+          usersList.appendChild(li);
+        }
+      }
+    }
+
+    // Event Listeners
+    createRoomBtn.addEventListener('click', async () => {
+      try {
+        createRoomBtn.style.display = 'none';
+        loading.style.display = 'block';
+        
+        // Simulate creating a room
+        setTimeout(() => {
+          const roomId = Math.random().toString(36).substring(2, 10);
+          const secret = generateSecret();
+          showWhiteboard(roomId, secret);
+        }, 1500);
+      } catch (error) {
+        console.error("Failed to create room:", error);
+        alert("Error creating room. Please try again.");
+        createRoomBtn.style.display = 'flex';
+        loading.style.display = 'none';
+      }
+    });
+
+    copyLinkBtn.addEventListener('click', () => {
+      shareLink.select();
+      document.execCommand('copy');
+      showNotification('Link copied to clipboard!');
+    });
+
+    copyRoomLinkBtn.addEventListener('click', () => {
+      shareLink.select();
+      document.execCommand('copy');
+      showNotification('Link copied to clipboard!');
+    });
+
+    backHomeBtn.addEventListener('click', showHome);
+
+    // Check for room in URL on page load
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const roomId = urlParams.get('room');
+      const secret = urlParams.get('secret');
+      
+      if (roomId && secret) {
+        // Simulate validating room secret
+        createRoomBtn.style.display = 'none';
+        loading.style.display = 'block';
+        loading.textContent = "Joining whiteboard room...";
+        
+        setTimeout(() => {
+          showWhiteboard(roomId, secret);
+        }, 1500);
+      }
+    });
+  </script>
+</body>
+</html>
