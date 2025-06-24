@@ -8,6 +8,13 @@ Here is a detailed `README.md` file for your **Collaborative Whiteboard** projec
 A real-time collaborative whiteboard that allows multiple users to draw, write, and interact on a shared canvas over the internet. It supports live updates via Firebase Realtime Database and room-based access to ensure secure sessions.
 
 ---
+# 🖊️ Collaborative Whiteboard
+
+![Live Demo](./assets/Demo.gif)
+
+A real-time collaborative whiteboard built with Firebase and Express.js.
+
+---
 
 ## 🚀 Features
 
