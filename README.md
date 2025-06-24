@@ -33,7 +33,7 @@ A real-time collaborative whiteboard that allows multiple users to draw, write, 
 ### 🔹 Backend
 - Node.js with Express.js
 - Firebase Admin SDK (via REST)
-- Hosted on [Railway](https://railway.app)
+- Hosted **frontend** on [Netlify](https://netlify.app) and **backend** on [Railway](https://railway.app)
 
 ---
 
