@@ -47,31 +47,20 @@ function parseSecretCode(secretCode) {
 
 async function createRoom() {
   try {
-    createRoomBtn.style.display = 'none';
-    loading.style.display = 'block';
-    
     const response = await fetch(`${API_BASE_URL}/api/rooms`, {
       method: 'POST',
-      mode: 'cors',
+      mode: 'cors', // ← Critical
       headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include'
+        'Content-Type': 'application/json'
+      }
     });
     
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.details || 'Failed to create room');
-    }
-    
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const data = await response.json();
-    console.log("Room created:", data);
     navigateToWhiteboard(data.roomId, data.secret);
   } catch (error) {
-    console.error("Error:", error);
-    alert(error.message);
-    createRoomBtn.style.display = 'flex';
-    loading.style.display = 'none';
+    console.error('Fetch Error:', error);
+    alert(`Failed to connect: ${error.message}`);
   }
 }
 
