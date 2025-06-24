@@ -1,3 +1,304 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Collaborative Whiteboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="whiteboard.css">
+</head>
+<body>
+  <div id="whiteboard-container">
+    <!- Enhanced Tools Pane -->
+    <!-- <div id="toolbar">
+      <div class="tool-group">
+        <h4><i class="fas fa-paint-brush"></i> Drawing Tools</h4>
+        <div class="tool-buttons">
+          <button id="pen" class="tool-btn active-tool" title="Pen">
+            <i class="fas fa-pen"></i>
+            <span class="tool-label">Pen</span>
+          </button>
+          <button id="eraser" class="tool-btn" title="Eraser">
+            <i class="fas fa-eraser"></i>
+            <span class="tool-label">Eraser</span>
+          </button>
+          <button id="rectangle" class="tool-btn" title="Rectangle">
+            <i class="fas fa-square"></i>
+            <span class="tool-label">Rectangle</span>
+          </button>
+          <button id="circle" class="tool-btn" title="Circle">
+            <i class="fas fa-circle"></i>
+            <span class="tool-label">Circle</span>
+          </button>
+          <button id="text" class="tool-btn" title="Text">
+            <i class="fas fa-font"></i>
+            <span class="tool-label">Text</span>
+          </button>
+        </div>
+      </div>
+      
+      <div class="tool-group">
+        <h4><i class="fas fa-sliders-h"></i> Properties</h4>
+        <div class="tool-control">
+          <label for="color-picker">Color</label>
+          <input type="color" id="color-picker" value="#000000">
+          <label for="brush-size">Brush Size: <span id="brush-size-value">5</span>px</label>
+          <input type="range" id="brush-size" min="1" max="50" value="5">
+        </div>
+      </div>
+      
+      <div class="tool-group">
+        <h4><i class="fas fa-tools"></i> Actions</h4>
+        <div class="tool-buttons">
+          <button id="undo" class="tool-btn" title="Undo">
+            <i class="fas fa-undo"></i>
+            <span class="tool-label">Undo</span>
+          </button>
+          <button id="redo" class="tool-btn" title="Redo">
+            <i class="fas fa-redo"></i>
+            <span class="tool-label">Redo</span>
+          </button>
+          <button id="clear" class="tool-btn" title="Clear">
+            <i class="fas fa-trash-alt"></i>
+            <span class="tool-label">Clear</span>
+          </button>
+          <button id="save" class="tool-btn" title="Save">
+            <i class="fas fa-save"></i>
+            <span class="tool-label">Save</span>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-Canvas Area -->
+    <!-- <div id="canvas-container">
+      <div class="canvas-header">
+        <div class="room-info">
+          <h2><i class="fas fa-chalkboard"></i> Collaborative Whiteboard</h2>
+          <div class="room-id">Room: <span id="room-id-display">ABC123</span></div>
+        </div>
+        <div class="header-actions">
+          <button class="header-btn">
+            <i class="fas fa-users"></i> <span id="user-count">5</span> Online
+          </button>
+          <button class="header-btn">
+            <i class="fas fa-comment"></i> Chat
+          </button>
+          <button class="header-btn">
+            <i class="fas fa-cog"></i> Settings
+          </button>
+        </div>
+      </div>
+      <canvas id="whiteboard"></canvas>
+    </div>
+    
+    <!-- User List -->
+    <!-- <div id="user-list">
+      <h3><i class="fas fa-user-friends"></i> Active Users</h3>
+      <ul id="users">
+        <li><i class="fas fa-user"></i> Alex Johnson (You)</li>
+        <li><i class="fas fa-user"></i> Sam Williams</li>
+        <li><i class="fas fa-user"></i> Taylor Smith</li>
+        <li><i class="fas fa-user"></i> Jordan Davis</li>
+        <li><i class="fas fa-user"></i> Morgan Lee</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    // Initialize the whiteboard
+    const canvas = document.getElementById('whiteboard');
+    const ctx = canvas.getContext('2d');
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentTool = 'pen';
+    let color = '#000000';
+    let brushSize = 5;
+    const actions = [];
+    const undoneActions = [];
+    
+    // Set canvas to full container size
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight - document.querySelector('.canvas-header').offsetHeight;
+      
+      // Redraw everything
+      redrawCanvas();
+    }
+    
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Draw a grid background
+      ctx.fillStyle = '#f9f9f9';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
+      drawGrid();
+      
+      // Redraw all actions
+      actions.forEach(action => {
+        drawAction(action);
+      });
+    }
+    
+    function drawGrid() {
+      ctx.strokeStyle = 'rgba(200, 200, 200, 0.3)';
+      ctx.lineWidth = 1;
+      
+      for(let x = 0; x < canvas.width; x += 20) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      
+      for(let y = 0; y < canvas.height; y += 20) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+    }
+    
+    function drawAction(action) {
+      ctx.strokeStyle = action.color;
+      ctx.fillStyle = action.color;
+      ctx.lineWidth = action.size;
+      
+      switch(action.tool) {
+        case 'pen':
+          ctx.beginPath();
+          ctx.moveTo(action.startX, action.startY);
+          ctx.lineTo(action.endX, action.endY);
+          ctx.stroke();
+          break;
+        case 'rectangle':
+          ctx.beginPath();
+          ctx.rect(action.x, action.y, action.width, action.height);
+          ctx.stroke();
+          break;
+        case 'circle':
+          ctx.beginPath();
+          ctx.arc(action.x, action.y, action.radius, 0, Math.PI * 2);
+          ctx.stroke();
+          break;
+        case 'text':
+          ctx.font = `${action.size}px Arial`;
+          ctx.fillText(action.text, action.x, action.y);
+          break;
+      }
+    }
+    
+    function startDrawing(e) {
+      isDrawing = true;
+      [lastX, lastY] = [e.offsetX, e.offsetY];
+      
+      if (currentTool === 'text') {
+        const text = prompt('Enter text:');
+        if (text) {
+          const action = {
+            tool: 'text',
+            x: lastX,
+            y: lastY,
+            color: color,
+            size: brushSize,
+            text: text
+          };
+          actions.push(action);
+          drawAction(action);
+        }
+        isDrawing = false;
+      }
+    }
+    
+    function draw(e) {
+      if (!isDrawing) return;
+      
+      ctx.strokeStyle = color;
+      ctx.lineWidth = brushSize;
+      ctx.lineCap = 'round';
+      
+      if (currentTool === 'pen') {
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        
+        // Save this segment
+        actions.push({
+          tool: 'pen',
+          startX: lastX,
+          startY: lastY,
+          endX: e.offsetX,
+          endY: e.offsetY,
+          color: color,
+          size: brushSize
+        });
+        
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+      }
+    }
+    
+    function stopDrawing() {
+      isDrawing = false;
+    }
+    
+    // Tool selection
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        // Remove active class from all buttons
+        document.querySelectorAll('.tool-btn').forEach(b => {
+          b.classList.remove('active-tool');
+        });
+        
+        // Add active class to clicked button
+        this.classList.add('active-tool');
+        
+        // Set current tool
+        currentTool = this.id;
+        
+        // Visual feedback
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+    });
+    
+    // Color picker
+    const colorPicker = document.getElementById('color-picker');
+    colorPicker.addEventListener('input', function() {
+      color = this.value;
+    });
+    
+    // Brush size
+    const brushSizeSlider = document.getElementById('brush-size');
+    const brushSizeValue = document.getElementById('brush-size-value');
+    brushSizeSlider.addEventListener('input', function() {
+      brushSize = this.value;
+      brushSizeValue.textContent = this.value;
+    });
+    
+    // Canvas events
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+    
+    // Initial resize
+    resizeCanvas();
+    
+    // Resize on window resize
+    window.addEventListener('resize', resizeCanvas);
+  </script>
+</body> -->
+<!-- </html>   -->
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,60 +311,51 @@
 <body>
   <!-- Whiteboard Page -->
   <div class="whiteboard-container" id="whiteboard-page">
-    <div class="toolbar-container">
-      <div id="toolbar">
-        <button class="back-btn" id="back-home">
-          <i class="fas fa-arrow-left"></i>
-        </button>
-        
-        <!-- Drawing Tools -->
-        <button id="pen" class="tool-btn active-tool" title="Pen"><i class="fas fa-pen"></i></button>
-        <button id="eraser" class="tool-btn" title="Eraser"><i class="fas fa-eraser"></i></button>
-        <button id="rectangle" class="tool-btn" title="Rectangle"><i class="fas fa-square"></i></button>
-        <button id="circle" class="tool-btn" title="Circle"><i class="fas fa-circle"></i></button>
-        <button id="text" class="tool-btn" title="Text"><i class="fas fa-font"></i></button>
-        
-        <!-- Color Picker -->
-        <div class="tool-section">
-          <label for="color-picker">Color:</label>
-          <input type="color" id="color-picker" value="#000000" title="Color">
-        </div>
-        
-        <!-- Brush Size -->
-        <div class="tool-section">
-          <label for="brush-size">Size:</label>
-          <input type="range" id="brush-size" min="1" max="50" value="5" title="Brush Size">
-          <span class="size-display" id="size-display">5px</span>
-        </div>
-        
-        <!-- Action Buttons -->
-        <button id="undo" class="tool-btn" title="Undo"><i class="fas fa-undo"></i></button>
-        <button id="redo" class="tool-btn" title="Redo"><i class="fas fa-redo"></i></button>
-        <button id="clear" class="tool-btn" title="Clear"><i class="fas fa-trash-alt"></i></button>
-        <button id="save" class="tool-btn" title="Save"><i class="fas fa-save"></i></button>
-        <button id="copy-room-link" class="tool-btn" title="Copy Room Link"><i class="fas fa-link"></i></button>
-      </div>
+    <!-- <button class="back-btn" id="back-home">
+      <i class="fas fa-arrow-left"></i> Back to Home
+    </button> -->
+    <div id="toolbar">
+      <button class="back-btn" id="back-home">
+    <i class="fas fa-arrow-left"></i>
+  </button>
+      <button id="pen" class="tool-btn active-tool" title="Pen"><i class="fas fa-pen"></i></button>
+      <button id="eraser" class="tool-btn" title="Eraser"><i class="fas fa-eraser"></i></button>
+      <button id="rectangle" class="tool-btn" title="Rectangle"><i class="fas fa-square"></i></button>
+      <button id="circle" class="tool-btn" title="Circle"><i class="fas fa-circle"></i></button>
+      <button id="text" class="tool-btn" title="Text"><i class="fas fa-font"></i></button>
+      <input type="color" id="color-picker" value="#000000" title="Color">
+      <input type="range" id="brush-size" min="1" max="50" value="5" title="Brush Size">
+      <span class="size-display" id="size-display">5px</span>
+      <button id="undo" class="tool-btn" title="Undo"><i class="fas fa-undo"></i></button>
+      <button id="redo" class="tool-btn" title="Redo"><i class="fas fa-redo"></i></button>
+      <button id="clear" class="tool-btn" title="Clear"><i class="fas fa-trash-alt"></i></button>
+      <button id="save" class="tool-btn" title="Save"><i class="fas fa-save"></i></button>
+      <button id="copy-room-link" class="tool-btn" title="Copy Room Link"><i class="fas fa-link"></i></button>
     </div>
-    
-    <div class="canvas-container">
+    <div id="canvas-container">
       <canvas id="whiteboard"></canvas>
     </div>
+    <div id="user-list">
+      <h3><i class="fas fa-users"></i> Active Users</h3>
+      <ul id="users"></ul>
+    </div>
     
-    <div class="user-panel">
-      <div id="user-list">
-        <h3><i class="fas fa-users"></i> Active Users</h3>
-        <ul id="users"></ul>
+    <!-- Link and secret container -->
+    <div class="link-container" id="link-container">
+      <div class="secret-section">
+        <div class="secret-header">
+          <i class="fas fa-key"></i> Secret Code:
+        </div>
+        <div class="secret-code" id="secret-code-display"></div>
       </div>
       
-      <div class="link-container" id="link-container">
-        <div class="link-section">
-          <div class="link-header">
-            <i class="fas fa-share-alt"></i> Shareable Link:
-          </div>
-          <div class="link-area">
-            <input type="text" id="share-link" readonly>
-            <button id="copy-link"><i class="fas fa-copy"></i> Copy Link</button>
-          </div>
+      <div class="link-section">
+        <div class="link-header">
+          <i class="fas fa-share-alt"></i> Shareable Link:
+        </div>
+        <div class="link-area">
+          <input type="text" id="share-link" readonly>
+          <button id="copy-link"><i class="fas fa-copy"></i> Copy Link</button>
         </div>
       </div>
     </div>
