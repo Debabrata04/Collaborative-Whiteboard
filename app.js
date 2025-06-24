@@ -48,21 +48,27 @@ function parseSecretCode(secretCode) {
 async function createRoom() {
   try {
     createRoomBtn.style.display = 'none';
-    secretCodeInput.parentElement.style.display = 'none';
     loading.style.display = 'block';
     
     const response = await fetch(`${API_BASE_URL}/api/rooms`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     });
     
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || 'Failed to create room');
+    }
+    
     const data = await response.json();
+    console.log("Room created:", data);
     navigateToWhiteboard(data.roomId, data.secret);
   } catch (error) {
-    console.error("Failed to create room:", error);
-    alert("Error creating room. Please try again.");
+    console.error("Error:", error);
+    alert(error.message);
     createRoomBtn.style.display = 'flex';
     loading.style.display = 'none';
   }
