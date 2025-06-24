@@ -1032,7 +1032,8 @@
 
 
 
-
+import { database } from './firebase-config.js';
+import { ref, onChildAdded, push, set, onChildRemoved } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
 // Application State
 let currentRoomId = null;
 let currentRoomSecret = null;
@@ -1093,11 +1094,28 @@ document.addEventListener('DOMContentLoaded', () => {
 // Setup user tracking
 function setupUserTracking(roomId) {
   currentUserId = Math.random().toString(36).substring(7);
+
+   // Add Firebase real-time updates
+  const roomRef = ref(database, `rooms/${roomId}`);
+  const usersRef = ref(database, `rooms/${roomId}/users`);
   
-  // Add current user
+  // Add current user to Firebase
   const userName = `User-${currentUserId.substring(0, 4)}`;
+  set(ref(database, `rooms/${roomId}/users/${currentUserId}`), userName);
   users[currentUserId] = userName;
   updateUserList();
+
+  onChildAdded(usersRef, (snapshot) => {
+    users[snapshot.key] = snapshot.val();
+    updateUserList();
+  });
+  
+  onChildRemoved(usersRef, (snapshot) => {
+    delete users[snapshot.key];
+    updateUserList();
+  }); 
+  // Add current user
+  // const userName = `User-${currentUserId.substring(0, 4)}`;
   
   // Simulate other users joining
   setTimeout(() => {
@@ -1156,10 +1174,16 @@ class Whiteboard {
     this.actions = [];
     this.undoneActions = [];
     this.drawingPath = [];
-
+    this.drawingsRef = ref(database, `rooms/${roomId}/drawings`);
     this.setupCanvas();
     this.setupEventListeners();
     this.setupToolbar();
+    onChildAdded(this.drawingsRef, (snapshot) => {
+      const action = snapshot.val();
+      if (action.userId !== currentUserId) {
+        this.executeAction(action);
+      }
+    });
   }
 
   setupCanvas() {
@@ -1441,6 +1465,11 @@ showNotification(message) {
   saveAction(action) {
     this.actions.push(action);
     this.undoneActions = [];
+    
+    // Push to Firebase
+    action.userId = currentUserId;
+    const newActionRef = push(this.drawingsRef);
+    set(newActionRef, action);
   }
 
   executeAction(action) {
