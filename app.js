@@ -45,22 +45,60 @@ function parseSecretCode(secretCode) {
 // Create a new room
 // Replace createRoom and joinRoom functions with API calls
 
+// async function createRoom() {
+//   try {
+//     const response = await fetch(`${API_BASE_URL}/api/rooms`, {
+//       method: 'POST',
+//       mode: 'cors', // ← Critical
+//       headers: {
+//         'Content-Type': 'application/json'
+//       }
+//     });
+    
+//     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+//     const data = await response.json();
+//     navigateToWhiteboard(data.roomId, data.secret);
+//   } catch (error) {
+//     console.error('Fetch Error:', error);
+//     alert(`Failed to connect: ${error.message}`);
+//   }
+// }
+
 async function createRoom() {
   try {
+    createRoomBtn.style.display = 'none';
+    secretCodeInput.parentElement.style.display = 'none';
+    loading.style.display = 'block';
+    loadingText.textContent = "Creating your whiteboard room...";
+
     const response = await fetch(`${API_BASE_URL}/api/rooms`, {
       method: 'POST',
-      mode: 'cors', // ← Critical
+      mode: 'cors',
       headers: {
         'Content-Type': 'application/json'
       }
     });
     
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
     const data = await response.json();
-    navigateToWhiteboard(data.roomId, data.secret);
+    console.log("Room created:", data); // Add this for debugging
+    
+    if (data.roomId && data.secret) {
+      navigateToWhiteboard(data.roomId, data.secret);
+    } else {
+      throw new Error('Invalid response from server');
+    }
   } catch (error) {
-    console.error('Fetch Error:', error);
-    alert(`Failed to connect: ${error.message}`);
+    console.error('Create Room Error:', error);
+    alert(`Failed to create room: ${error.message}`);
+    
+    // Reset UI
+    createRoomBtn.style.display = 'block';
+    secretCodeInput.parentElement.style.display = 'flex';
+    loading.style.display = 'none';
   }
 }
 
