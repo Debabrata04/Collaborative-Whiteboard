@@ -43,5 +43,5 @@ A real-time collaborative whiteboard that allows multiple users to draw, write, 
 ### 1. 📦 Clone the Repo
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/collaborative-whiteboard.git
+git clone https://github.com/debabrata04/Collaborative-Whiteboard.git
 cd collaborative-whiteboard
