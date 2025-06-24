@@ -90,3 +90,6 @@ async function joinRoom() {
     secretCodeInput.parentElement.style.display = 'flex';
   }
 }
+// Add this at the end of your app.js file
+createRoomBtn.addEventListener('click', createRoom);
+joinRoomBtn.addEventListener('click', joinRoom);
