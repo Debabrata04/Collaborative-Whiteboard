@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3001;
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
-  'https://your-netlify-site.netlify.app' // ADD YOUR NETLIFY URL HERE
+  'https://realtime-colab-whiteboard.netlify.app/' // ADD YOUR NETLIFY URL HERE
 ];
 
 app.use(cors({
