@@ -52,7 +52,10 @@ async function createRoom() {
     loading.style.display = 'block';
     
     const response = await fetch(`${API_BASE_URL}/api/rooms`, {
-      method: 'POST'
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
     });
     
     const data = await response.json();
