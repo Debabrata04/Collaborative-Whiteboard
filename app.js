@@ -52,10 +52,11 @@ async function createRoom() {
     
     const response = await fetch(`${API_BASE_URL}/api/rooms`, {
       method: 'POST',
+      mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
+      },
+      credentials: 'include'
     });
     
     if (!response.ok) {
