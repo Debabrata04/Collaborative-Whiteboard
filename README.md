@@ -19,7 +19,6 @@ A real-time collaborative whiteboard that allows multiple users to draw, write, 
 - 🔁 **Undo, Redo**, and ✨ **Clear Canvas**
 - 💾 **Save Whiteboard** as PNG
 - 🔗 **Shareable Room Link** for real-time collaboration
-- 👥 **Live User Tracking** (see who's in the room)
 - 🔐 **Room Access Control** using generated secrets
 
 ---
