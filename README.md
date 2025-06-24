@@ -6,7 +6,7 @@ A real-time collaborative whiteboard that allows multiple users to draw, write, 
 
 ## 🎥 Live Demo
 
-![Live Demo](./assets/Demo-video_colab.gif)
+![Live Demo](./assets/Demo.gif)
 
 ---
 
