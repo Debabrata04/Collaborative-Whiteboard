@@ -1,7 +1,15 @@
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:3001' 
-  : 'https://your-render-backend-url.onrender.com';
+// const API_BASE_URL = process.env.NODE_ENV === 'development' 
+//   ? 'http://localhost:3001' 
+//   : 'https://your-render-backend-url.onrender.com';
 // Application State
+let API_BASE_URL;
+if (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1") {
+  API_BASE_URL = 'http://localhost:3001';
+} else {
+  // Use your Vercel backend URL here
+  API_BASE_URL = 'https://backend-colab-rvzd.vercel.app/';
+}
+
 let currentRoomId = null;
 let currentRoomSecret = null;
 
