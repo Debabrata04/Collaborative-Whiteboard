@@ -7,7 +7,7 @@ if (window.location.hostname === "localhost" || window.location.hostname === "12
   API_BASE_URL = 'http://localhost:3001';
 } else {
   // Use your Vercel backend URL here
-  API_BASE_URL = 'https://backend-colab-rvzd.vercel.app/';
+  API_BASE_URL = 'backendcolab-production-f82d.up.railway.app';
 }
 
 let currentRoomId = null;
